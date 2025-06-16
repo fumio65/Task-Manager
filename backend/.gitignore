@@ -1,21 +1,18 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-env/
+*.py[cod]
 venv/
+env/
 *.sqlite3
-
-# VSCode & OS
-.vscode/
-.DS_Store
 
 # Django
 *.log
-db.sqlite3
 
-# React (for later)
+# Node & React (for future frontend)
 node_modules/
 dist/
 .env
+
+# Misc
+.DS_Store
+.vscode/
