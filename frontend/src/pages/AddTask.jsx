@@ -3,58 +3,88 @@ import { useNavigate } from 'react-router-dom';
 import { createTask } from '../services/api';
 
 const AddTask = () => {
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [error, setError] = useState('');
-    const [submitting, setSubmitting] = useState(false)
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [fieldError, setFieldError] = useState('');
+  const [formError, setFormError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!title.trim()) return setError('Title is required.');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        setSubmitting(true);
-        setError(null);
+    // Frontend validation
+    if (!title.trim()) {
+      setFieldError("Title is required.");
+      setFormError('')
+      return;
+    }
 
-        try {
-            await createTask({ title, description, completed: false });
-            navigate('/tasks')
-        } catch (error) {
-            setError("Failed to add tasks.")
-        } finally {
-            setSubmitting(false);
+    setSubmitting(true);
+    setFieldError('');
+    setFormError('');
+
+    try {
+        await createTask({ title, description, completed: false });
+        navigate("/tasks");
+      } catch (err) {
+        const response = err?.response?.data;
+      
+        // Field-specific validation
+        if (response?.title?.length > 0) {
+          setFieldError(response.title[0]);
+          return;
         }
-    };
+      
+        if (response?.description?.length > 0) {
+          setFormError(response.description[0]);
+          return;
+        }
+      
+        // Network/server/general errors
+        if (err.message === "Network Error" || !err.response) {
+          setFormError("Server is unreachable. Please try again later.");
+        } else {
+          setFormError("Failed to add task.");
+        }
+      } finally {
+        setSubmitting(false)
+      }
+  };
 
-    return (
-        <div className='max-w-xl mx-auto mt-10 bg-white p-6 rounded-lg shadow'>
-            <h1 className='text-2xl font-bold mb-4'>Add New Task</h1>
-            <form onSubmit={handleSubmit} className='space-y-4'>
-                <input
-                 type="text"
-                 className='w-full p-2 border rounded'
-                 placeholder='Task title'
-                 value={title}
-                 onChange={(e) => setTitle(e.target.value)}
-                />
-                <textarea
-                 className='w-full p-2 border rounded'
-                 placeholder='Description (optional)'
-                 value={description}
-                 onChange={(e) => setDescription(e.target.value)}
-                />
-                {error && <p className='text-red-600 text-sm'>{error}</p>}
-                <button
-                 type='submit'
-                 disabled={submitting}
-                 className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300 ease-in-out'
-                >
-                    {submitting ? 'adding...' : 'Add Task'}
-                </button>
-            </form>
-        </div>
-    )
-}
+  return (
+    <div className='max-w-xl mx-auto mt-10 bg-white p-6 rounded-lg shadow'>
+      <h1 className='text-2xl font-bold mb-4'>Add New Task</h1>
+
+      <form onSubmit={handleSubmit} className='space-y-4' noValidate>
+        <input
+          type="text"
+          className='w-full p-2 border rounded'
+          placeholder='Task title'
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        {fieldError && <p className='text-red-600 text-sm'>{fieldError}</p>}
+
+        <textarea
+          className='w-full p-2 border rounded'
+          placeholder='Description (optional)'
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        {formError && <p className='mt-2 text-red-600 text-sm'>{formError}</p>}
+
+        <button
+          type='submit'
+          disabled={submitting}
+          className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300 ease-in-out'
+        >
+          {submitting ? 'Adding...' : 'Add Task'}
+        </button>
+      </form>
+    </div>
+  );
+};
 
 export default AddTask;
