@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createTask } from '../services/api';
+import { validateTaskInput } from '../utils/validation';
 
 const AddTask = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [fieldError, setFieldError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({ title: '', description: '' });
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -14,43 +15,42 @@ const AddTask = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Frontend validation
-    if (!title.trim()) {
-      setFieldError("Title is required.");
-      setFormError('')
+    const errors = validateTaskInput({ title, description });
+
+    if (errors) {
+      setFieldErrors(errors);
+      setFormError('');
       return;
     }
 
     setSubmitting(true);
-    setFieldError('');
+    setFieldErrors({ title: '', description: '' });
     setFormError('');
 
     try {
-        await createTask({ title, description, completed: false });
-        navigate("/tasks");
-      } catch (err) {
-        const response = err?.response?.data;
-      
-        // Field-specific validation
-        if (response?.title?.length > 0) {
-          setFieldError(response.title[0]);
-          return;
-        }
-      
-        if (response?.description?.length > 0) {
-          setFormError(response.description[0]);
-          return;
-        }
-      
-        // Network/server/general errors
-        if (err.message === "Network Error" || !err.response) {
-          setFormError("Server is unreachable. Please try again later.");
-        } else {
-          setFormError("Failed to add task.");
-        }
-      } finally {
-        setSubmitting(false)
+      await createTask({ title, description, completed: false });
+      navigate("/tasks");
+    } catch (err) {
+      const response = err?.response?.data;
+
+      if (response?.title?.length > 0) {
+        setFieldErrors(prev => ({ ...prev, title: response.title[0] }));
+        return;
       }
+
+      if (response?.description?.length > 0) {
+        setFieldErrors(prev => ({ ...prev, description: response.description[0] }));
+        return;
+      }
+
+      if (err.message === "Network Error" || !err.response) {
+        setFormError("Server is unreachable. Please try again later.");
+      } else {
+        setFormError("Failed to add task.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -65,7 +65,7 @@ const AddTask = () => {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        {fieldError && <p className='text-red-600 text-sm'>{fieldError}</p>}
+        {fieldErrors.title && <p className='text-red-600 text-sm'>{fieldErrors.title}</p>}
 
         <textarea
           className='w-full p-2 border rounded'
@@ -73,6 +73,8 @@ const AddTask = () => {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+        {fieldErrors.description && <p className='text-red-600 text-sm'>{fieldErrors.description}</p>}
+
         {formError && <p className='mt-2 text-red-600 text-sm'>{formError}</p>}
 
         <button
