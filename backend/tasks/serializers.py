@@ -8,8 +8,6 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
     def validate_title(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Title cannot be blank.")
         if len(value) < 5:
             raise serializers.ValidationError("Title must be at least 5 characters long.")
         if len(value) > 100:

@@ -32,22 +32,24 @@ const AddTask = () => {
       navigate("/tasks");
     } catch (err) {
       const response = err?.response?.data;
+      let handled = false;
 
       if (response?.title?.length > 0) {
-        setFieldErrors(prev => ({ ...prev, title: response.title[0] }));
-        return;
+        setFieldErrors(prev => ({ ...prev, title: response.title }));
+        handled = true;
       }
-
+      
       if (response?.description?.length > 0) {
-        setFieldErrors(prev => ({ ...prev, description: response.description[0] }));
-        return;
+        setFieldErrors(prev => ({ ...prev, description: response.description }));
+        handled = true;
       }
-
+      
       if (err.message === "Network Error" || !err.response) {
         setFormError("Server is unreachable. Please try again later.");
-      } else {
+      } else if (!handled) {
         setFormError("Failed to add task.");
       }
+      
     } finally {
       setSubmitting(false);
     }
