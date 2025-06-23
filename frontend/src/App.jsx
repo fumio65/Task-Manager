@@ -10,8 +10,8 @@ const App = () => {
       <ErrorBoundary>
         <Routes>
           <Route path='/' element={<Home />} />
-          <Route path='/tasks' element={<TaskList />} />
           <Route path='/add' element={<AddTask />} />
+          <Route path='/tasks' element={<TaskList />} />
         </Routes>
       </ErrorBoundary>
     </Router>
