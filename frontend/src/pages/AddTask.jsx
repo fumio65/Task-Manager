@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createTask } from '../services/api';
 import TaskForm from '../components/TaskForm';
+import toast from 'react-hot-toast';
 
 const AddTask = () => {
   const [submitting, setSubmitting] = useState(false);
@@ -11,18 +12,19 @@ const AddTask = () => {
     setSubmitting(true);
     try {
       await createTask(data);
+      toast.success('Task created successfully!');
       navigate('/tasks');
     } catch (err) {
       const response = err?.response?.data;
       let handled = false;
 
       if (response?.title?.length > 0) {
-        setFieldErrors(response.title[0]);
+        setFieldErrors(prev => ({ ...prev, title: response.title[0] }));
         handled = true;
       }
 
       if (response?.description?.length > 0) {
-        setFieldErrors(response.description[0]);
+        setFieldErrors(prev => ({ ...prev, description: response.description[0] }));
         handled = true;
       }
 
@@ -31,6 +33,8 @@ const AddTask = () => {
       } else if (!handled) {
         setFormError('Failed to add task.');
       }
+
+      toast.error('Failed to create task.');
     } finally {
       setSubmitting(false);
     }

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { updateTask, getTaskById } from '../services/api';
 import TaskForm from '../components/TaskForm';
+import toast from 'react-hot-toast';
 
 const EditTask = () => {
   const { id } = useParams();
@@ -33,26 +34,29 @@ const EditTask = () => {
     setSubmitting(true);
     try {
       await updateTask(id, data);
+      toast.success('Task updated successfully!');
       navigate('/tasks');
     } catch (err) {
       const response = err?.response?.data;
       let handled = false;
-
+  
       if (response?.title?.length > 0) {
         setFieldErrors(prev => ({ ...prev, title: response.title[0] }));
         handled = true;
       }
-
+  
       if (response?.description?.length > 0) {
         setFieldErrors(prev => ({ ...prev, description: response.description[0] }));
         handled = true;
       }
-
+  
       if (err.message === 'Network Error' || !err.response) {
         setFormError('Server is unreachable. Please try again later.');
       } else if (!handled) {
         setFormError('Failed to update task.');
       }
+  
+      toast.error('Failed to update task.');
     } finally {
       setSubmitting(false);
     }
